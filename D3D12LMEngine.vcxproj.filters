@@ -24,9 +24,12 @@
     <ClCompile Include="D3D12\DXContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="support\DXWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="support\WInInclude.h">
+    <ClInclude Include="support\WinInclude.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="support\ComPointer.h">
@@ -36,6 +39,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D3D12\DXContext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="support\DXWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

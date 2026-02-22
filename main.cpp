@@ -1,6 +1,7 @@
 
-#include <support/WInInclude.h>
+#include <support/WinInclude.h>
 #include <support/ComPointer.h>
+#include <support/DXWindow.h>
 #include <debug/DXDebugLayer.h>
 #include <D3D12/DXContext.h>
 
@@ -10,15 +11,19 @@ int main()
 
 	DXDebugLayer::Get().Init();
 
-	if (DXContext::Get().Init())
+	if (DXContext::Get().Init() && DXWindow::Get().Init())
 	{
-		while (true)
+		while (!DXWindow::Get().shouldClose())
 		{
+			DXWindow::Get().Update();
+			
 			auto* cmdList = DXContext::Get().InitCommandList();
 
 			DXContext::Get().ExecuteCommandList();
 		}
 		
+
+		DXWindow::Get().ShutDown();
 		DXContext::Get().ShutDown();
 	}
 
