@@ -85,10 +85,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="debug\DXDebugLayer.cpp" />
+    <ClCompile Include="D3D12\DXContext.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="debug\DXDebugLayer.h" />
+    <ClInclude Include="D3D12\DXContext.h" />
     <ClInclude Include="support\ComPointer.h" />
     <ClInclude Include="support\WInInclude.h" />
   </ItemGroup>
