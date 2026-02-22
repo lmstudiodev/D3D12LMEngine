@@ -1,4 +1,3 @@
-#include <iostream>
 
 #include <support/WInInclude.h>
 #include <support/ComPointer.h>
@@ -7,12 +6,19 @@
 
 int main()
 {
-	std::cout << "Welcome to LMEngine - a D3D12 based graphic engine";
+	std::cout << "Welcome to LMEngine - a D3D12 based graphic engine" << std::endl;
 
 	DXDebugLayer::Get().Init();
 
 	if (DXContext::Get().Init())
 	{
+		while (true)
+		{
+			auto* cmdList = DXContext::Get().InitCommandList();
+
+			DXContext::Get().ExecuteCommandList();
+		}
+		
 		DXContext::Get().ShutDown();
 	}
 
