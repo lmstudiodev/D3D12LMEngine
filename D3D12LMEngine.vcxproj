@@ -87,12 +87,14 @@
     <ClCompile Include="debug\DXDebugLayer.cpp" />
     <ClCompile Include="D3D12\DXContext.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="support\DXWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="debug\DXDebugLayer.h" />
     <ClInclude Include="D3D12\DXContext.h" />
     <ClInclude Include="support\ComPointer.h" />
-    <ClInclude Include="support\WInInclude.h" />
+    <ClInclude Include="support\DXWindow.h" />
+    <ClInclude Include="support\WinInclude.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <support/WInInclude.h>
+#include <support/WinInclude.h>
 #include <support/ComPointer.h>
 
 class  DXContext
