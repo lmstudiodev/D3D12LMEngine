@@ -56,7 +56,40 @@ bool DXWindow::Init()
 
     std::cout << "[WIN32] Window created !!" << std::endl;
 
+    auto& factory = DXContext::Get().GetDXGIFactory();
+
+    DXGI_SWAP_CHAIN_DESC1 scDesc{};
+    scDesc.Width = 1920;
+    scDesc.Height = 1080;
+    scDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    scDesc.Stereo = false;
+    scDesc.SampleDesc.Count = 1;
+    scDesc.SampleDesc.Quality = 0;
+    scDesc.BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    scDesc.BufferCount = GetFrameCount();
+    scDesc.Scaling = DXGI_SCALING_STRETCH;
+    scDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    scDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+    scDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+
+    DXGI_SWAP_CHAIN_FULLSCREEN_DESC scFullScreenDesc{};
+    scFullScreenDesc.Windowed = true;
+
+    ComPointer<IDXGISwapChain1> swc;
+
+    factory->CreateSwapChainForHwnd(DXContext::Get().GetCommandQueue(), m_window, &scDesc, &scFullScreenDesc, nullptr, &swc);
+
+    if (!swc.QueryInterface(m_swapChain))
+        return false;
+
+    std::cout << "[D3D12] SwapChain created !!" << std::endl;
+
     return true;
+}
+
+void DXWindow::Present()
+{
+    m_swapChain->Present(1, 0);
 }
 
 void DXWindow::Update()
@@ -72,6 +105,8 @@ void DXWindow::Update()
 
 void DXWindow::ShutDown()
 {
+    m_swapChain.Release();
+    
     if (m_window)
     {
         DestroyWindow(m_window);

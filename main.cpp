@@ -20,8 +20,11 @@ int main()
 			auto* cmdList = DXContext::Get().InitCommandList();
 
 			DXContext::Get().ExecuteCommandList();
+
+			DXWindow::Get().Present();
 		}
 		
+		DXContext::Get().Flush(DXWindow::GetFrameCount());
 
 		DXWindow::Get().ShutDown();
 		DXContext::Get().ShutDown();
