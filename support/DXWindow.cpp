@@ -40,8 +40,8 @@ bool DXWindow::Init()
         WS_OVERLAPPEDWINDOW | WS_VISIBLE, 
         monitorInfo.rcWork.left + 100, 
         monitorInfo.rcWork.top + 100, 
-        1920, 
-        1080,
+        m_width, 
+        m_height,
         nullptr,
         nullptr,
         wcex.hInstance,
@@ -56,7 +56,40 @@ bool DXWindow::Init()
 
     std::cout << "[WIN32] Window created !!" << std::endl;
 
+    auto& factory = DXContext::Get().GetDXGIFactory();
+
+    DXGI_SWAP_CHAIN_DESC1 scDesc{};
+    scDesc.Width = m_width;
+    scDesc.Height = m_height;
+    scDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    scDesc.Stereo = false;
+    scDesc.SampleDesc.Count = 1;
+    scDesc.SampleDesc.Quality = 0;
+    scDesc.BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    scDesc.BufferCount = GetFrameCount();
+    scDesc.Scaling = DXGI_SCALING_STRETCH;
+    scDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    scDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+    scDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+
+    DXGI_SWAP_CHAIN_FULLSCREEN_DESC scFullScreenDesc{};
+    scFullScreenDesc.Windowed = true;
+
+    ComPointer<IDXGISwapChain1> swc;
+
+    factory->CreateSwapChainForHwnd(DXContext::Get().GetCommandQueue(), m_window, &scDesc, &scFullScreenDesc, nullptr, &swc);
+
+    if (!swc.QueryInterface(m_swapChain))
+        return false;
+
+    std::cout << "[D3D12] SwapChain created !!" << std::endl;
+
     return true;
+}
+
+void DXWindow::Present()
+{
+    m_swapChain->Present(1, 0);
 }
 
 void DXWindow::Update()
@@ -72,6 +105,8 @@ void DXWindow::Update()
 
 void DXWindow::ShutDown()
 {
+    m_swapChain.Release();
+    
     if (m_window)
     {
         DestroyWindow(m_window);
@@ -83,10 +118,33 @@ void DXWindow::ShutDown()
     }
 }
 
+void DXWindow::Resize()
+{
+    RECT rect;
+
+    if (GetClientRect(m_window, &rect))
+    {
+        m_width = rect.right - rect.left;
+        m_height = rect.bottom - rect.top;
+
+        m_swapChain->ResizeBuffers(GetFrameCount(), 
+            m_width, 
+            m_height, 
+            DXGI_FORMAT_UNKNOWN, 
+            DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING);
+
+        m_shouldResize = false;
+    }
+}
+
 LRESULT DXWindow::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
+    case WM_SIZE:
+        if(lParam && (HIWORD(lParam) != Get().m_height || LOWORD(lParam) != Get().m_width))
+            Get().m_shouldResize = true;
+        break;
     case WM_CLOSE:
         Get().m_shouldClose = true;
         return 0;
