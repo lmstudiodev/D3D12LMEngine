@@ -13,9 +13,15 @@ int main()
 
 	if (DXContext::Get().Init() && DXWindow::Get().Init())
 	{
-		while (!DXWindow::Get().shouldClose())
+		while (!DXWindow::Get().ShouldClose())
 		{
 			DXWindow::Get().Update();
+
+			if (DXWindow::Get().ShouldResize())
+			{
+				DXContext::Get().Flush(DXWindow::GetFrameCount());
+				DXWindow::Get().Resize();
+			}
 			
 			auto* cmdList = DXContext::Get().InitCommandList();
 

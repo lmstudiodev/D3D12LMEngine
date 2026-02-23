@@ -40,8 +40,8 @@ bool DXWindow::Init()
         WS_OVERLAPPEDWINDOW | WS_VISIBLE, 
         monitorInfo.rcWork.left + 100, 
         monitorInfo.rcWork.top + 100, 
-        1920, 
-        1080,
+        m_width, 
+        m_height,
         nullptr,
         nullptr,
         wcex.hInstance,
@@ -59,8 +59,8 @@ bool DXWindow::Init()
     auto& factory = DXContext::Get().GetDXGIFactory();
 
     DXGI_SWAP_CHAIN_DESC1 scDesc{};
-    scDesc.Width = 1920;
-    scDesc.Height = 1080;
+    scDesc.Width = m_width;
+    scDesc.Height = m_height;
     scDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     scDesc.Stereo = false;
     scDesc.SampleDesc.Count = 1;
@@ -118,10 +118,33 @@ void DXWindow::ShutDown()
     }
 }
 
+void DXWindow::Resize()
+{
+    RECT rect;
+
+    if (GetClientRect(m_window, &rect))
+    {
+        m_width = rect.right - rect.left;
+        m_height = rect.bottom - rect.top;
+
+        m_swapChain->ResizeBuffers(GetFrameCount(), 
+            m_width, 
+            m_height, 
+            DXGI_FORMAT_UNKNOWN, 
+            DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING);
+
+        m_shouldResize = false;
+    }
+}
+
 LRESULT DXWindow::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
+    case WM_SIZE:
+        if(lParam && (HIWORD(lParam) != Get().m_height || LOWORD(lParam) != Get().m_width))
+            Get().m_shouldResize = true;
+        break;
     case WM_CLOSE:
         Get().m_shouldClose = true;
         return 0;

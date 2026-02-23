@@ -9,7 +9,8 @@ public:
 	DXWindow(const DXWindow&) = delete;
 	DXWindow& operator=(const DXWindow&) = delete;
 
-	inline bool shouldClose() const { return m_shouldClose; }
+	inline bool ShouldClose() const { return m_shouldClose; }
+	inline bool ShouldResize() const { return m_shouldResize; }
 
 	static constexpr size_t GetFrameCount()
 	{
@@ -31,15 +32,20 @@ public:
 	void Present();
 	void Update();
 	void ShutDown();
+	void Resize();
 
 private:
 	static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
+	UINT m_width = 1920;
+	UINT m_height = 1080;
+
 	ATOM m_wndClass = 0;
 	HWND m_window = nullptr;
 
 	bool m_shouldClose = false;
+	bool m_shouldResize = false;
 
 	ComPointer<IDXGISwapChain3> m_swapChain;
 };
