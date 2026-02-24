@@ -101,8 +101,6 @@ void DXWindow::Draw()
     
     DXWindow::Get().BeginFrame(cmdList);
 
-    //DRAW PRIMITIVES
-
     DXWindow::Get().EndFrame(cmdList);
 
     DXContext::Get().ExecuteCommandList();

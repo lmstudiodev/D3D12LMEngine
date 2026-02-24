@@ -2,6 +2,7 @@
 
 #include <support/WinInclude.h>
 #include <support/ComPointer.h>
+#include <support/Shader.h>
 
 struct Vertex
 {
@@ -68,5 +69,8 @@ private:
 
 	D3D12_VERTEX_BUFFER_VIEW m_vbv{};
 
-	Vertex vertices[3];
+	Vertex vertices[3]{};
+
+	Shader m_vertexShader;
+	Shader m_pixelShader;
 };

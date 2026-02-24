@@ -88,7 +88,7 @@ void DXContext::CreateCommittedResources()
 
 	D3D12_INPUT_ELEMENT_DESC vertexLayout[] =
 	{
-		{"position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		{"Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 	};
 
 	D3D12_RESOURCE_DESC resDesc{};
@@ -121,11 +121,19 @@ void DXContext::CreateCommittedResources()
 
 	ExecuteCommandList();
 
+	//Shader
+	m_vertexShader.LoadFromFile("VertexShader.cso");
+	m_pixelShader.LoadFromFile("PixelShader.cso");
+
 	//Pipeline state
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gfxPsoDesc{};
 	gfxPsoDesc.InputLayout.NumElements = _countof(vertexLayout);
 	gfxPsoDesc.InputLayout.pInputElementDescs = vertexLayout;
 	gfxPsoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+	gfxPsoDesc.VS.BytecodeLength = m_vertexShader.GetSize();
+	gfxPsoDesc.VS.pShaderBytecode = m_vertexShader.GetBuffer();
+	gfxPsoDesc.PS.BytecodeLength = m_pixelShader.GetSize();
+	gfxPsoDesc.PS.pShaderBytecode = m_pixelShader.GetBuffer();
 
 	m_vbv.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
 	m_vbv.SizeInBytes = sizeof(Vertex) * _countof(vertices);
