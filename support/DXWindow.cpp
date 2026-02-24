@@ -84,15 +84,15 @@ bool DXWindow::Init()
 
     std::cout << "[D3D12] SwapChain created !!" << std::endl;
 
+    if (!CreateRTVDescriptorHeap())
+        return false;
+
+    InitRTVHandles();
+
     if (!GetBuffers())
         return false;
 
     return true;
-}
-
-void DXWindow::Present()
-{
-    m_swapChain->Present(1, 0);
 }
 
 void DXWindow::Draw()
@@ -101,12 +101,49 @@ void DXWindow::Draw()
     
     DXWindow::Get().BeginFrame(cmdList);
 
-    //DRAW 
+    //DRAW PRIMITIVES
 
     DXWindow::Get().EndFrame(cmdList);
 
     DXContext::Get().ExecuteCommandList();
     
+    Present();
+}
+
+void DXWindow::BeginFrame(ID3D12GraphicsCommandList7* cmdList)
+{
+    m_currentBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+
+    D3D12_RESOURCE_BARRIER barr{};
+    barr.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barr.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    barr.Transition.pResource = m_buffers[m_currentBufferIndex];
+    barr.Transition.Subresource = 0;
+    barr.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+    barr.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+    float clearColor[] = { 0.4f, 0.4f, 0.8f, 1.0f };
+
+    cmdList->ResourceBarrier(1, &barr);
+    cmdList->ClearRenderTargetView(m_retvHandles[m_currentBufferIndex], clearColor, 0, nullptr);
+    cmdList->OMSetRenderTargets(1, &m_retvHandles[m_currentBufferIndex], false, nullptr);
+}
+
+void DXWindow::EndFrame(ID3D12GraphicsCommandList7* cmdList)
+{
+    D3D12_RESOURCE_BARRIER barr{};
+    barr.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barr.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    barr.Transition.pResource = m_buffers[m_currentBufferIndex];
+    barr.Transition.Subresource = 0;
+    barr.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barr.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+
+    cmdList->ResourceBarrier(1, &barr);
+}
+
+void DXWindow::Present()
+{
     m_swapChain->Present(1, 0);
 }
 
@@ -124,6 +161,8 @@ void DXWindow::Update()
 void DXWindow::ShutDown()
 {
     ReleaseBuffers();
+
+    m_rtvDescHeap.Release();
     
     m_swapChain.Release();
     
@@ -201,34 +240,6 @@ void DXWindow::SetFullscreen(bool enabled)
     m_isFullscreen = enabled;
 }
 
-void DXWindow::BeginFrame(ID3D12GraphicsCommandList7* cmdList)
-{
-    m_currentBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
-    
-    D3D12_RESOURCE_BARRIER barr{};
-    barr.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barr.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barr.Transition.pResource = m_buffers[m_currentBufferIndex];
-    barr.Transition.Subresource = 0;
-    barr.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-    barr.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    
-    cmdList->ResourceBarrier(1, &barr);
-}
-
-void DXWindow::EndFrame(ID3D12GraphicsCommandList7* cmdList)
-{
-    D3D12_RESOURCE_BARRIER barr{};
-    barr.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barr.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barr.Transition.pResource = m_buffers[m_currentBufferIndex];
-    barr.Transition.Subresource = 0;
-    barr.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    barr.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-
-    cmdList->ResourceBarrier(1, &barr);
-}
-
 bool DXWindow::GetBuffers()
 {
     for (size_t i = 0; i < FrameCount; i++)
@@ -238,9 +249,53 @@ bool DXWindow::GetBuffers()
             std::cout << "[D3D12] Unable to get buffers from swapchain !!" << std::endl;
             return false;
         }
+
+        CreateRendertargetView(i);
     }
     
     return true;
+}
+
+bool DXWindow::CreateRTVDescriptorHeap()
+{
+    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
+    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    rtvHeapDesc.NumDescriptors = FrameCount;
+    rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    rtvHeapDesc.NodeMask = 0;
+
+    if (FAILED(DXContext::Get().GetDevice()->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap))))
+    {
+        std::cout << "[D3D12] RTV Descriptor Heap creation failed !!" << std::endl;
+        return false;
+    }
+
+    std::cout << "[D3D12] RTV Descriptor Heap created !!" << std::endl;
+
+    return true;
+}
+
+void DXWindow::CreateRendertargetView(size_t bufferIndex)
+{
+    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+    rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+    rtvDesc.Texture2D.MipSlice = 0;
+    rtvDesc.Texture2D.PlaneSlice = 0;
+
+    DXContext::Get().GetDevice()->CreateRenderTargetView(m_buffers[bufferIndex], &rtvDesc, m_retvHandles[bufferIndex]);
+}
+
+void DXWindow::InitRTVHandles()
+{
+    auto firstHandle = m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
+    auto handleIncrement = DXContext::Get().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+    for (size_t i = 0; i < FrameCount; i++)
+    {
+        m_retvHandles[i] = firstHandle;
+        m_retvHandles[i].ptr += handleIncrement * i;
+    }
 }
 
 void DXWindow::ReleaseBuffers()

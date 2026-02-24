@@ -32,21 +32,29 @@ private:
 
 public:
 	bool Init();
-	void Present();
+	//void Present();
 	void Draw();
 	void Update();
 	void ShutDown();
 	void Resize();
 	void SetFullscreen(bool enabled);
 
-	void BeginFrame(ID3D12GraphicsCommandList7* cmdList);
-	void EndFrame(ID3D12GraphicsCommandList7* cmdList);
+	//void BeginFrame(ID3D12GraphicsCommandList7* cmdList);
+	//void EndFrame(ID3D12GraphicsCommandList7* cmdList);
 
 private:
 	static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+	bool CreateRTVDescriptorHeap();
+	void CreateRendertargetView(size_t bufferIndex);
+	void InitRTVHandles();
+
 	bool GetBuffers();
 	void ReleaseBuffers();
+
+	void Present();
+	void BeginFrame(ID3D12GraphicsCommandList7* cmdList);
+	void EndFrame(ID3D12GraphicsCommandList7* cmdList);
 
 private:
 	UINT m_width = 1920;
@@ -62,6 +70,9 @@ private:
 
 	ComPointer<IDXGISwapChain3> m_swapChain;
 	ComPointer<ID3D12Resource2> m_buffers[FrameCount];
+	ComPointer<ID3D12DescriptorHeap> m_rtvDescHeap;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE m_retvHandles[FrameCount];
 
 	size_t m_currentBufferIndex = 0;
 };
