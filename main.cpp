@@ -31,7 +31,8 @@ int main()
 
 			DXWindow::Get().BeginFrame(cmdList);
 
-			//DRAW 
+			//DRAW
+			DXContext::Get().Draw();
 
 			DXWindow::Get().EndFrame(cmdList);
 

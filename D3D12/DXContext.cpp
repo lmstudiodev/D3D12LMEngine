@@ -68,8 +68,6 @@ void DXContext::CheckRaytracingSupport()
 
 void DXContext::CreateCommittedResources()
 {
-	const char* hello = "Hello World!";
-
 	D3D12_HEAP_PROPERTIES hpUpload{};
 	hpUpload.Type = D3D12_HEAP_TYPE_UPLOAD;
 	hpUpload.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
@@ -84,6 +82,15 @@ void DXContext::CreateCommittedResources()
 	hpDefault.CreationNodeMask = 0;
 	hpDefault.VisibleNodeMask = 0;
 
+	vertices[0] = { -1.0f, -1.0f };
+	vertices[1] = { 0.0f, 1.0f };
+	vertices[2] = { 1.0f, -1.0f };
+
+	D3D12_INPUT_ELEMENT_DESC vertexLayout[] =
+	{
+		{"position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+	};
+
 	D3D12_RESOURCE_DESC resDesc{};
 	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	resDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
@@ -97,8 +104,8 @@ void DXContext::CreateCommittedResources()
 	resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-	DXContext::Get().GetDevice()->CreateCommittedResource(&hpUpload, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_uploadBuffer));
-	DXContext::Get().GetDevice()->CreateCommittedResource(&hpDefault, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_vertexBuffer));
+	m_device->CreateCommittedResource(&hpUpload, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_uploadBuffer));
+	m_device->CreateCommittedResource(&hpDefault, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_vertexBuffer));
 
 	void* uploadBufferAddress;
 	D3D12_RANGE uploadRange;
@@ -106,13 +113,30 @@ void DXContext::CreateCommittedResources()
 	uploadRange.End = 1023;
 
 	m_uploadBuffer->Map(0, &uploadRange, &uploadBufferAddress);
-	memcpy(uploadBufferAddress, hello, strlen(hello) + 1);
+	memcpy(uploadBufferAddress, vertices, sizeof(vertices));
 	m_uploadBuffer->Unmap(0, &uploadRange);
 
-	auto* cmdList = DXContext::Get().InitCommandList();
+	auto* cmdList = InitCommandList();
 	cmdList->CopyBufferRegion(m_vertexBuffer, 0, m_uploadBuffer, 0, 1024);
 
-	DXContext::Get().ExecuteCommandList();
+	ExecuteCommandList();
+
+	//Pipeline state
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC gfxPsoDesc{};
+	gfxPsoDesc.InputLayout.NumElements = _countof(vertexLayout);
+	gfxPsoDesc.InputLayout.pInputElementDescs = vertexLayout;
+	gfxPsoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+
+	m_vbv.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+	m_vbv.SizeInBytes = sizeof(Vertex) * _countof(vertices);
+	m_vbv.StrideInBytes = sizeof(Vertex);
+}
+
+void DXContext::Draw()
+{
+	m_cmdList->IASetVertexBuffers(0, 1, &m_vbv);
+	m_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_cmdList->DrawInstanced(_countof(vertices), 1, 0, 0);
 }
 
 void DXContext::ShutDown()

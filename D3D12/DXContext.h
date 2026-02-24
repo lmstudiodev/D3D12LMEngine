@@ -3,6 +3,12 @@
 #include <support/WinInclude.h>
 #include <support/ComPointer.h>
 
+struct Vertex
+{
+	float x;
+	float y;
+};
+
 class  DXContext
 {
 public:
@@ -26,6 +32,7 @@ public:
 	bool Init();
 	void ShutDown();
 
+	void Draw();
 	void SignalAndWait();
 	ID3D12GraphicsCommandList7* InitCommandList();
 	void CreateCommittedResources();
@@ -58,4 +65,8 @@ private:
 
 	UINT64 m_fenceValue = 0;
 	HANDLE m_fenceEvent = nullptr;
+
+	D3D12_VERTEX_BUFFER_VIEW m_vbv{};
+
+	Vertex vertices[3];
 };
