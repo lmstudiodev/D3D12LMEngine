@@ -1,6 +1,21 @@
 #include "DXContext.h"
 #include <cstdlib>
 
+void DXContext::CheckRaytracingSupport()
+{
+	D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
+
+	if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5))))
+	{
+		if (options5.RaytracingTier < D3D12_RAYTRACING_TIER_1_0)
+		{
+			std::cout << "[D3D12] Ray Tracing not supported !!!" << std::endl;
+		}
+	}
+
+	std::cout << "[D3D12] Ray Tracing supported  !!!" << std::endl;
+}
+
 bool DXContext::Init()
 {
 	if (FAILED(CreateDXGIFactory2(0, IID_PPV_ARGS(&m_dxgiFactory))))
@@ -45,6 +60,8 @@ bool DXContext::Init()
 		return false;
 
 	std::cout << "[D3D12] Graphic Command List created !!!" << std::endl;
+
+	CheckRaytracingSupport();
 
 	return true;
 }
