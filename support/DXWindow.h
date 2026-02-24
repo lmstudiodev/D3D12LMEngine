@@ -9,6 +9,7 @@ public:
 	DXWindow(const DXWindow&) = delete;
 	DXWindow& operator=(const DXWindow&) = delete;
 
+	inline bool IsFullscreen() const { return m_isFullscreen; }
 	inline bool ShouldClose() const { return m_shouldClose; }
 	inline bool ShouldResize() const { return m_shouldResize; }
 
@@ -33,6 +34,7 @@ public:
 	void Update();
 	void ShutDown();
 	void Resize();
+	void SetFullscreen(bool enabled);
 
 private:
 	static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -46,6 +48,7 @@ private:
 
 	bool m_shouldClose = false;
 	bool m_shouldResize = false;
+	bool m_isFullscreen = false;
 
 	ComPointer<IDXGISwapChain3> m_swapChain;
 };
