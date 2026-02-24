@@ -28,6 +28,7 @@ public:
 
 	void SignalAndWait();
 	ID3D12GraphicsCommandList7* InitCommandList();
+	void CreateCommittedResources();
 	void ExecuteCommandList();
 
 	inline void Flush(size_t count)
@@ -51,6 +52,9 @@ private:
 
 	ComPointer<ID3D12CommandAllocator> m_allocator;
 	ComPointer<ID3D12GraphicsCommandList7> m_cmdList;
+
+	ComPointer<ID3D12Resource2> m_uploadBuffer;
+	ComPointer<ID3D12Resource2> m_vertexBuffer;
 
 	UINT64 m_fenceValue = 0;
 	HANDLE m_fenceEvent = nullptr;

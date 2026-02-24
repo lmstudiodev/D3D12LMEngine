@@ -1,21 +1,6 @@
 #include "DXContext.h"
 #include <cstdlib>
 
-void DXContext::CheckRaytracingSupport()
-{
-	D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
-
-	if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5))))
-	{
-		if (options5.RaytracingTier < D3D12_RAYTRACING_TIER_1_0)
-		{
-			std::cout << "[D3D12] Ray Tracing not supported !!!" << std::endl;
-		}
-	}
-
-	std::cout << "[D3D12] Ray Tracing supported  !!!" << std::endl;
-}
-
 bool DXContext::Init()
 {
 	if (FAILED(CreateDXGIFactory2(0, IID_PPV_ARGS(&m_dxgiFactory))))
@@ -66,8 +51,76 @@ bool DXContext::Init()
 	return true;
 }
 
+void DXContext::CheckRaytracingSupport()
+{
+	D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
+
+	if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5))))
+	{
+		if (options5.RaytracingTier < D3D12_RAYTRACING_TIER_1_0)
+		{
+			std::cout << "[D3D12] Ray Tracing not supported !!!" << std::endl;
+		}
+	}
+
+	std::cout << "[D3D12] Ray Tracing supported  !!!" << std::endl;
+}
+
+void DXContext::CreateCommittedResources()
+{
+	const char* hello = "Hello World!";
+
+	D3D12_HEAP_PROPERTIES hpUpload{};
+	hpUpload.Type = D3D12_HEAP_TYPE_UPLOAD;
+	hpUpload.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	hpUpload.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	hpUpload.CreationNodeMask = 0;
+	hpUpload.VisibleNodeMask = 0;
+
+	D3D12_HEAP_PROPERTIES hpDefault{};
+	hpDefault.Type = D3D12_HEAP_TYPE_DEFAULT;
+	hpDefault.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	hpDefault.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	hpDefault.CreationNodeMask = 0;
+	hpDefault.VisibleNodeMask = 0;
+
+	D3D12_RESOURCE_DESC resDesc{};
+	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+	resDesc.Width = 1024;
+	resDesc.Height = 1;
+	resDesc.DepthOrArraySize = 1;
+	resDesc.MipLevels = 1;
+	resDesc.Format = DXGI_FORMAT_UNKNOWN;
+	resDesc.SampleDesc.Count = 1;
+	resDesc.SampleDesc.Quality = 0;
+	resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	DXContext::Get().GetDevice()->CreateCommittedResource(&hpUpload, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_uploadBuffer));
+	DXContext::Get().GetDevice()->CreateCommittedResource(&hpDefault, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_vertexBuffer));
+
+	void* uploadBufferAddress;
+	D3D12_RANGE uploadRange;
+	uploadRange.Begin = 0;
+	uploadRange.End = 1023;
+
+	m_uploadBuffer->Map(0, &uploadRange, &uploadBufferAddress);
+	memcpy(uploadBufferAddress, hello, strlen(hello) + 1);
+	m_uploadBuffer->Unmap(0, &uploadRange);
+
+	auto* cmdList = DXContext::Get().InitCommandList();
+	cmdList->CopyBufferRegion(m_vertexBuffer, 0, m_uploadBuffer, 0, 1024);
+
+	DXContext::Get().ExecuteCommandList();
+}
+
 void DXContext::ShutDown()
 {
+	m_vertexBuffer.Release();
+
+	m_uploadBuffer.Release();
+	
 	m_cmdList.Release();
 	
 	m_allocator.Release();

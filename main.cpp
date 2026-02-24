@@ -13,6 +13,8 @@ int main()
 
 	if (DXContext::Get().Init() && DXWindow::Get().Init())
 	{
+		DXContext::Get().CreateCommittedResources();
+		
 		while (!DXWindow::Get().ShouldClose())
 		{
 			DXWindow::Get().Update();
@@ -25,17 +27,17 @@ int main()
 
 			DXWindow::Get().Draw();
 			
-			//auto* cmdList = DXContext::Get().InitCommandList();
+			auto* cmdList = DXContext::Get().InitCommandList();
 
-			//DXWindow::Get().BeginFrame(cmdList);
+			DXWindow::Get().BeginFrame(cmdList);
 
 			//DRAW 
 
-			//DXWindow::Get().EndFrame(cmdList);
+			DXWindow::Get().EndFrame(cmdList);
 
-			//DXContext::Get().ExecuteCommandList();
+			DXContext::Get().ExecuteCommandList();
 
-			//DXWindow::Get().Present();
+			DXWindow::Get().Present();
 		}
 		
 		DXContext::Get().Flush(DXWindow::GetFrameCount());

@@ -32,15 +32,15 @@ private:
 
 public:
 	bool Init();
-	//void Present();
+	void Present();
 	void Draw();
 	void Update();
 	void ShutDown();
 	void Resize();
 	void SetFullscreen(bool enabled);
 
-	//void BeginFrame(ID3D12GraphicsCommandList7* cmdList);
-	//void EndFrame(ID3D12GraphicsCommandList7* cmdList);
+	void BeginFrame(ID3D12GraphicsCommandList7* cmdList);
+	void EndFrame(ID3D12GraphicsCommandList7* cmdList);
 
 private:
 	static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -52,9 +52,9 @@ private:
 	bool GetBuffers();
 	void ReleaseBuffers();
 
-	void Present();
-	void BeginFrame(ID3D12GraphicsCommandList7* cmdList);
-	void EndFrame(ID3D12GraphicsCommandList7* cmdList);
+	//void Present();
+	//void BeginFrame(ID3D12GraphicsCommandList7* cmdList);
+	//void EndFrame(ID3D12GraphicsCommandList7* cmdList);
 
 private:
 	UINT m_width = 1920;
