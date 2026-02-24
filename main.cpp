@@ -22,8 +22,16 @@ int main()
 				DXContext::Get().Flush(DXWindow::GetFrameCount());
 				DXWindow::Get().Resize();
 			}
+
+			//DXWindow::Get().Draw();
 			
 			auto* cmdList = DXContext::Get().InitCommandList();
+
+			DXWindow::Get().BeginFrame(cmdList);
+
+			//DRAW 
+
+			DXWindow::Get().EndFrame(cmdList);
 
 			DXContext::Get().ExecuteCommandList();
 

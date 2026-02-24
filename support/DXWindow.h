@@ -33,10 +33,14 @@ private:
 public:
 	bool Init();
 	void Present();
+	void Draw();
 	void Update();
 	void ShutDown();
 	void Resize();
 	void SetFullscreen(bool enabled);
+
+	void BeginFrame(ID3D12GraphicsCommandList7* cmdList);
+	void EndFrame(ID3D12GraphicsCommandList7* cmdList);
 
 private:
 	static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -58,4 +62,6 @@ private:
 
 	ComPointer<IDXGISwapChain3> m_swapChain;
 	ComPointer<ID3D12Resource2> m_buffers[FrameCount];
+
+	size_t m_currentBufferIndex = 0;
 };
