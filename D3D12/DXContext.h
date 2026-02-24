@@ -19,6 +19,9 @@ public:
 private:
 	DXContext() = default;
 
+private:
+	void CheckRaytracingSupport();
+
 public:
 	bool Init();
 	void ShutDown();

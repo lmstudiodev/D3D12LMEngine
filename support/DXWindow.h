@@ -12,10 +12,12 @@ public:
 	inline bool IsFullscreen() const { return m_isFullscreen; }
 	inline bool ShouldClose() const { return m_shouldClose; }
 	inline bool ShouldResize() const { return m_shouldResize; }
+	inline bool UseRayTracing() const { return m_useRayTracing; }
 
+	static constexpr size_t FrameCount = 2;
 	static constexpr size_t GetFrameCount()
 	{
-		return 2;
+		return FrameCount;
 	}
 
 	inline static DXWindow& Get()
@@ -39,6 +41,9 @@ public:
 private:
 	static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+	bool GetBuffers();
+	void ReleaseBuffers();
+
 private:
 	UINT m_width = 1920;
 	UINT m_height = 1080;
@@ -49,6 +54,8 @@ private:
 	bool m_shouldClose = false;
 	bool m_shouldResize = false;
 	bool m_isFullscreen = false;
+	bool m_useRayTracing = false;
 
 	ComPointer<IDXGISwapChain3> m_swapChain;
+	ComPointer<ID3D12Resource2> m_buffers[FrameCount];
 };

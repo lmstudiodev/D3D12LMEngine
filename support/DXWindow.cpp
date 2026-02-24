@@ -84,6 +84,9 @@ bool DXWindow::Init()
 
     std::cout << "[D3D12] SwapChain created !!" << std::endl;
 
+    if (!GetBuffers())
+        return false;
+
     return true;
 }
 
@@ -105,6 +108,8 @@ void DXWindow::Update()
 
 void DXWindow::ShutDown()
 {
+    ReleaseBuffers();
+    
     m_swapChain.Release();
     
     if (m_window)
@@ -120,6 +125,8 @@ void DXWindow::ShutDown()
 
 void DXWindow::Resize()
 {
+    ReleaseBuffers();
+    
     RECT rect;
 
     if (GetClientRect(m_window, &rect))
@@ -135,6 +142,8 @@ void DXWindow::Resize()
 
         m_shouldResize = false;
     }
+
+    GetBuffers();
 }
 
 void DXWindow::SetFullscreen(bool enabled)
@@ -177,6 +186,28 @@ void DXWindow::SetFullscreen(bool enabled)
     m_isFullscreen = enabled;
 }
 
+bool DXWindow::GetBuffers()
+{
+    for (size_t i = 0; i < FrameCount; i++)
+    {
+        if (FAILED(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i]))))
+        {
+            std::cout << "[D3D12] Unable to get buffers from swapchain !!" << std::endl;
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+void DXWindow::ReleaseBuffers()
+{
+    for (size_t i = 0; i < FrameCount; i++)
+    {
+        m_buffers[i].Release();
+    }
+}
+
 LRESULT DXWindow::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -191,10 +222,19 @@ LRESULT DXWindow::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lPar
             Get().m_shouldClose = true;
             return 0;
         }
+        else if (wParam == VK_TAB)
+        {
+            Get().m_useRayTracing = !Get().m_useRayTracing;
+        }
         break;
     case WM_SIZE:
-        if(lParam && (HIWORD(lParam) != Get().m_height || LOWORD(lParam) != Get().m_width))
-            Get().m_shouldResize = true;
+        if (lParam && (HIWORD(lParam) != Get().m_height || LOWORD(lParam) != Get().m_width))
+        {
+            if (HIWORD(lParam) != 0 || LOWORD(lParam) != 0)
+            {
+                Get().m_shouldResize = true;
+            }
+        }
         break;
     case WM_CLOSE:
         Get().m_shouldClose = true;
