@@ -1,6 +1,5 @@
 
 #include <support/WinInclude.h>
-
 #include <application/App.h>
 
 int main()
