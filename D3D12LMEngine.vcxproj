@@ -84,6 +84,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="application\App.cpp" />
     <ClCompile Include="debug\DXDebugLayer.cpp" />
     <ClCompile Include="D3D12\DXContext.cpp" />
     <ClCompile Include="main.cpp" />
@@ -91,6 +92,7 @@
     <ClCompile Include="support\DXWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="application\App.h" />
     <ClInclude Include="debug\DXDebugLayer.h" />
     <ClInclude Include="D3D12\DXContext.h" />
     <ClInclude Include="support\Shader.h" />

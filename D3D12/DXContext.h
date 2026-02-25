@@ -1,5 +1,4 @@
 #pragma once
-
 #include <support/WinInclude.h>
 #include <support/ComPointer.h>
 #include <support/Shader.h>
