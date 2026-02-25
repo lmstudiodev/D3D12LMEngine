@@ -74,7 +74,7 @@ private:
 
 	D3D12_VERTEX_BUFFER_VIEW m_vbv{};
 
-	Vertex vertices[3]{};
+	Vertex vertices[6]{};
 
 	Shader m_rootSignatureShader;
 	Shader m_vertexShader;

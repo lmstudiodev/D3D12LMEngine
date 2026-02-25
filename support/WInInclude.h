@@ -12,3 +12,6 @@
 #include <d3d12sdklayers.h>
 #include <dxgidebug.h>
 #endif
+
+#include <wincodec.h>
+#include <wincodecsdk.h>

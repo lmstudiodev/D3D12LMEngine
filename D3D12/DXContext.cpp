@@ -2,7 +2,7 @@
 #include <cstdlib>
 
 bool DXContext::Init()
-{
+{	
 	if (FAILED(CreateDXGIFactory2(0, IID_PPV_ARGS(&m_dxgiFactory))))
 		return false;
 	
@@ -347,9 +347,12 @@ void DXContext::LoadShader()
 
 void DXContext::LoadMesh()
 {
-	vertices[0] = { { -1.0f, -1.0f, 1.0f }, { 1.0f, 0.5f, 0.5f }, { 0.0f, 0.0f } };
-	vertices[1] = { { 0.0f, 1.0f, 1.0f },   { 0.5f, 1.0f, 0.5f }, { 0.0f, 0.0f } };
-	vertices[2] = { { 1.0f, -1.0f, 1.0f },  { 0.5f, 0.5f, 1.0f }, { 0.0f, 0.0f } };
+	vertices[0] = { { -0.5f, -0.5f, 1.0f }, { 1.0f, 0.5f, 0.5f }, { 0.0f, 0.0f } };
+	vertices[1] = { { -0.5f, 0.5f, 1.0f },  { 0.5f, 1.0f, 0.5f }, { 0.0f, 0.0f } };
+	vertices[2] = { { 0.5f, -0.5f, 1.0f },  { 0.5f, 0.5f, 1.0f }, { 0.0f, 0.0f } };
+	vertices[3] = { { -0.5f, 0.5f, 1.0f },  { 0.5f, 0.5f, 1.0f }, { 0.0f, 0.0f } };
+	vertices[4] = { { 0.5f, 0.5f, 1.0f },   { 0.5f, 1.0f, 0.5f }, { 0.0f, 0.0f } };
+	vertices[5] = { { 0.5f, -0.5f, 1.0f },  { 1.0f, 0.5f, 0.5f }, { 0.0f, 0.0f } };
 }
 
 void DXContext::SignalAndWait()

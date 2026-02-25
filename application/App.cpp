@@ -1,4 +1,5 @@
 #include "App.h"
+#include <support/ImageLoader.h>
 
 App::App()
 {
@@ -14,6 +15,9 @@ bool App::Init()
 
 	if (DXWindow::Get().Init())
 		m_isRunning = true;
+
+	ImageLoader::ImageData textureData;
+	ImageLoader::LoadImageFromFile("./texture/brick.png", textureData);
 
 	return m_isRunning;
 }

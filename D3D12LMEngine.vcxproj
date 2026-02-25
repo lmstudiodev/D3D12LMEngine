@@ -64,7 +64,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Windowscodecs.lib;d3d12.lib;dxgi.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -80,7 +80,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Windowscodecs.lib;d3d12.lib;dxgi.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -88,6 +88,7 @@
     <ClCompile Include="debug\DXDebugLayer.cpp" />
     <ClCompile Include="D3D12\DXContext.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="support\ImageLoader.cpp" />
     <ClCompile Include="support\Shader.cpp" />
     <ClCompile Include="support\DXWindow.cpp" />
   </ItemGroup>
@@ -95,6 +96,7 @@
     <ClInclude Include="application\App.h" />
     <ClInclude Include="debug\DXDebugLayer.h" />
     <ClInclude Include="D3D12\DXContext.h" />
+    <ClInclude Include="support\ImageLoader.h" />
     <ClInclude Include="support\Mesh.h" />
     <ClInclude Include="support\Shader.h" />
     <ClInclude Include="support\ComPointer.h" />
@@ -124,6 +126,9 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.8</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">6.8</ShaderModel>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="texture\wood.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
