@@ -22,8 +22,6 @@ bool DXWindow::Init()
     if (!GetBuffers())
         return false;
 
-    DXContext::Get().CreateCommittedResources();
-
     return true;
 }
 

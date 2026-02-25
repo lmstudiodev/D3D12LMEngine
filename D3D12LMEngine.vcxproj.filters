@@ -56,9 +56,13 @@
     <ClInclude Include="application\App.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="support\Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\VertexShader.hlsl" />
     <FxCompile Include="shaders\PixelShader.hlsl" />
+    <FxCompile Include="shaders\RootSignature.hlsl" />
   </ItemGroup>
 </Project>
