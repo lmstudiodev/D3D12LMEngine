@@ -27,6 +27,12 @@
     <ClCompile Include="support\DXWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="support\Shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="application\App.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="support\WinInclude.h">
@@ -44,5 +50,19 @@
     <ClInclude Include="support\DXWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="support\Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="application\App.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="support\Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shaders\VertexShader.hlsl" />
+    <FxCompile Include="shaders\PixelShader.hlsl" />
+    <FxCompile Include="shaders\RootSignature.hlsl" />
   </ItemGroup>
 </Project>
