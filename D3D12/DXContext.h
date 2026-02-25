@@ -29,13 +29,14 @@ private:
 	bool CreateRootSignature();
 	bool CreatePipeline();
 	void SetVertexBufferView();
+	void SetViewPort(const float width, const float height);
 	void LoadShader();
 	void LoadMesh();
 
 public:
 	bool Init();
 	void ShutDown();
-	void Draw();
+	void Draw(const float width, const float height);
 	void ExecuteCommandList();
 	ID3D12GraphicsCommandList7* InitCommandList();
 

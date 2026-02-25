@@ -37,7 +37,7 @@ void DXWindow::Update()
     
     DXWindow::Get().BeginFrame(cmdList);
 
-    DXContext::Get().Draw();
+    DXContext::Get().Draw((float)m_width, (float)m_height);
 
     DXWindow::Get().EndFrame(cmdList);
 

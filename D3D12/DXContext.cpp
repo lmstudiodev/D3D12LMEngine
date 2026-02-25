@@ -59,12 +59,16 @@ bool DXContext::Init()
 	return true;
 }
 
-void DXContext::Draw()
+void DXContext::Draw(const float width, const float height)
 {
 	m_cmdList->SetPipelineState(m_pso);
 	m_cmdList->SetGraphicsRootSignature(m_rootSignature);
+
 	m_cmdList->IASetVertexBuffers(0, 1, &m_vbv);
 	m_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	SetViewPort(width, height);
+
 	m_cmdList->DrawInstanced(_countof(vertices), 1, 0, 0);
 }
 
@@ -102,6 +106,27 @@ ID3D12GraphicsCommandList7* DXContext::InitCommandList()
 	m_cmdList->Reset(m_allocator, nullptr);
 
 	return m_cmdList;
+}
+
+void DXContext::SetViewPort(const float width, const float height)
+{
+	D3D12_VIEWPORT vp{};
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+	vp.Width = width;
+	vp.Height = height;
+	vp.MinDepth = 1.0f;
+	vp.MaxDepth = 0.0f;
+
+	m_cmdList->RSSetViewports(1, &vp);
+
+	RECT scRect;
+	scRect.left = 0;
+	scRect.top = 0;
+	scRect.right = width;
+	scRect.bottom = height;
+
+	m_cmdList->RSSetScissorRects(1, &scRect);
 }
 
 void DXContext::ExecuteCommandList()
@@ -214,7 +239,9 @@ bool DXContext::CreatePipeline()
 {
 	D3D12_INPUT_ELEMENT_DESC vertexLayout[] =
 	{
-		{"Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		{"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{"Color", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{"TexCoord", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 	};
 	
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gfxPsoDesc{};
@@ -320,9 +347,9 @@ void DXContext::LoadShader()
 
 void DXContext::LoadMesh()
 {
-	vertices[0] = { -1.0f, -1.0f };
-	vertices[1] = { 0.0f, 1.0f };
-	vertices[2] = { 1.0f, -1.0f };
+	vertices[0] = { { -1.0f, -1.0f, 1.0f }, { 1.0f, 0.5f, 0.5f }, { 0.0f, 0.0f } };
+	vertices[1] = { { 0.0f, 1.0f, 1.0f },   { 0.5f, 1.0f, 0.5f }, { 0.0f, 0.0f } };
+	vertices[2] = { { 1.0f, -1.0f, 1.0f },  { 0.5f, 0.5f, 1.0f }, { 0.0f, 0.0f } };
 }
 
 void DXContext::SignalAndWait()
