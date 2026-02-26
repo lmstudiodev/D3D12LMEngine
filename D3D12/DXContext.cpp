@@ -70,11 +70,18 @@ void DXContext::Draw(const float width, const float height)
 {
 	m_cmdList->SetPipelineState(m_pso);
 	m_cmdList->SetGraphicsRootSignature(m_rootSignature);
+	m_cmdList->SetDescriptorHeaps(1, &m_textureDescriptorHeap);
 
 	m_cmdList->IASetVertexBuffers(0, 1, &m_vbv);
 	m_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	SetViewPort(width, height);
+
+	static float color[] = { 0.0f, 0.0f, 0.0f };
+	pukeColor(color);
+
+	m_cmdList->SetGraphicsRoot32BitConstants(0, 3, color, 0);
+	m_cmdList->SetGraphicsRootDescriptorTable(1, m_textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
 	m_cmdList->DrawInstanced(_countof(vertices), 1, 0, 0);
 }
@@ -84,6 +91,8 @@ void DXContext::ShutDown()
 	m_pso.Release();
 
 	m_rootSignature.Release();
+
+	m_textureDescriptorHeap.Release();
 
 	m_texture.Release();
 
@@ -240,6 +249,30 @@ void DXContext::CreateCommittedResources(const ImageLoader::ImageData& textureDa
 	resTextureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
 	m_device->CreateCommittedResource(&hpDefault, D3D12_HEAP_FLAG_NONE, &resTextureDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_texture));
+
+	D3D12_DESCRIPTOR_HEAP_DESC dhd{};
+	dhd.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	dhd.NumDescriptors = 8;
+	dhd.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	dhd.NodeMask = 0;
+
+	if (FAILED(m_device->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&m_textureDescriptorHeap))))
+	{
+		std::cout << "[D3D12] Texture Descriptor Heap creation failed !!" << std::endl;
+	}
+
+	std::cout << "[D3D12] Texture Descriptor Heap created !!" << std::endl;
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
+	srv.Format = textureData.giPixelFormat;
+	srv.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srv.Texture2D.MipLevels = 1;
+	srv.Texture2D.MostDetailedMip = 0;
+	srv.Texture2D.PlaneSlice = 0;
+	srv.Texture2D.ResourceMinLODClamp = 0;
+
+	m_device->CreateShaderResourceView(m_texture, &srv, m_textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
 void DXContext::CreateBuffers(const void* source, size_t size, const ImageLoader::ImageData& texture, uint32_t textureSize)
@@ -412,12 +445,13 @@ void DXContext::LoadShader()
 
 void DXContext::LoadMesh()
 {
-	vertices[0] = { { -0.5f, -0.5f, 1.0f }, { 1.0f, 0.5f, 0.5f }, { 0.0f, 0.0f } };
+	vertices[0] = { { -0.5f, -0.5f, 1.0f }, { 1.0f, 0.5f, 0.5f }, { 0.0f, 1.0f } };
 	vertices[1] = { { -0.5f, 0.5f, 1.0f },  { 0.5f, 1.0f, 0.5f }, { 0.0f, 0.0f } };
-	vertices[2] = { { 0.5f, -0.5f, 1.0f },  { 0.5f, 0.5f, 1.0f }, { 0.0f, 0.0f } };
+	vertices[2] = { { 0.5f, -0.5f, 1.0f },  { 0.5f, 0.5f, 1.0f }, { 1.0f, 1.0f } };
+
 	vertices[3] = { { -0.5f, 0.5f, 1.0f },  { 0.5f, 0.5f, 1.0f }, { 0.0f, 0.0f } };
-	vertices[4] = { { 0.5f, 0.5f, 1.0f },   { 0.5f, 1.0f, 0.5f }, { 0.0f, 0.0f } };
-	vertices[5] = { { 0.5f, -0.5f, 1.0f },  { 1.0f, 0.5f, 0.5f }, { 0.0f, 0.0f } };
+	vertices[4] = { { 0.5f, 0.5f, 1.0f },   { 0.5f, 1.0f, 0.5f }, { 1.0f, 0.0f } };
+	vertices[5] = { { 0.5f, -0.5f, 1.0f },  { 1.0f, 0.5f, 0.5f }, { 1.0f, 1.0f } };
 }
 
 void DXContext::SignalAndWait()
@@ -434,5 +468,22 @@ void DXContext::SignalAndWait()
 	else
 	{
 		std::exit(-1);
+	}
+}
+
+void DXContext::pukeColor(float* color)
+{
+	static int pukeState = 0;
+	color[pukeState] += 0.01f;
+	if (color[pukeState] > 1.0f)
+	{
+		pukeState++;
+		if (pukeState == 3)
+		{
+			color[0] = 0.0f;
+			color[1] = 0.0f;
+			color[2] = 0.0f;
+			pukeState = 0;
+		}
 	}
 }

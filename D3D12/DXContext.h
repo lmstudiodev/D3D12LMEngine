@@ -33,6 +33,7 @@ private:
 	void SetViewPort(const float width, const float height);
 	void LoadShader();
 	void LoadMesh();
+	void pukeColor(float* color);
 
 public:
 	bool Init();
@@ -71,6 +72,8 @@ private:
 	ComPointer<ID3D12RootSignature> m_rootSignature;
 
 	ComPointer<ID3D12PipelineState> m_pso;
+
+	ComPointer<ID3D12DescriptorHeap> m_textureDescriptorHeap;
 
 	UINT64 m_fenceValue = 0;
 	HANDLE m_fenceEvent = nullptr;
