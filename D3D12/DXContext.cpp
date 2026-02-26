@@ -85,6 +85,8 @@ void DXContext::ShutDown()
 
 	m_rootSignature.Release();
 
+	m_texture.Release();
+
 	m_vertexBuffer.Release();
 
 	m_uploadBuffer.Release();

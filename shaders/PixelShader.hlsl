@@ -1,5 +1,9 @@
 #include "RootSignature.hlsl"
 
+float3 puke : register(b0);
+Texture2D<float4> textures[] : register(t0);
+sampler textureSampler : register(s0);
+
 struct VertexOut
 {
     float4 pos : SV_Position;
@@ -10,5 +14,7 @@ struct VertexOut
 [RootSignature(ROOTSIG)]
 float4 main(VertexOut Input) : SV_TARGET
 {
-    return float4(Input.color, 1.0f);
+    float4 texel = textures[0].Sample(textureSampler, float2(0.5f, 0.5f));
+    
+    return float4(texel.rgb, 1.0f);
 }
