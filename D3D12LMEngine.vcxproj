@@ -128,6 +128,8 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <Image Include="texture\brick.png" />
+    <Image Include="texture\rust.png" />
     <Image Include="texture\wood.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

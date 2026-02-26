@@ -1,6 +1,7 @@
 #pragma once
 #include <support/WinInclude.h>
 #include <support/ComPointer.h>
+#include <support/ImageLoader.h>
 #include <support/Shader.h>
 #include <support/Mesh.h>
 
@@ -23,18 +24,20 @@ private:
 private:
 	bool CreateCommandQueue();
 	void CheckRaytracingSupport();
-	void CreateCommittedResources();
+	void CreateCommittedResources(const ImageLoader::ImageData& textureData, uint32_t textureSize);
 	void SignalAndWait();
-	void CreateBuffers(const void* source, size_t size);
+	void CreateBuffers(const void* source, size_t size, const ImageLoader::ImageData& texture, uint32_t textureSize);
 	bool CreateRootSignature();
 	bool CreatePipeline();
 	void SetVertexBufferView();
 	void SetViewPort(const float width, const float height);
 	void LoadShader();
 	void LoadMesh();
+	void pukeColor(float* color);
 
 public:
 	bool Init();
+	bool CreateResources(const ImageLoader::ImageData& textureData);
 	void ShutDown();
 	void Draw(const float width, const float height);
 	void ExecuteCommandList();
@@ -64,10 +67,13 @@ private:
 
 	ComPointer<ID3D12Resource2> m_uploadBuffer;
 	ComPointer<ID3D12Resource2> m_vertexBuffer;
+	ComPointer<ID3D12Resource2> m_texture;
 
 	ComPointer<ID3D12RootSignature> m_rootSignature;
 
 	ComPointer<ID3D12PipelineState> m_pso;
+
+	ComPointer<ID3D12DescriptorHeap> m_textureDescriptorHeap;
 
 	UINT64 m_fenceValue = 0;
 	HANDLE m_fenceEvent = nullptr;
