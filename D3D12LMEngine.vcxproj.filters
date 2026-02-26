@@ -75,5 +75,11 @@
     <Image Include="texture\wood.jpg">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="texture\brick.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="texture\rust.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

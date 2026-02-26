@@ -14,10 +14,12 @@ bool App::Init()
 	DXDebugLayer::Get().Init();
 
 	if (DXWindow::Get().Init())
-		m_isRunning = true;
+	{
+		ImageLoader::ImageData textureData;
+		ImageLoader::LoadImageFromFile("./texture/rust.png", textureData);
 
-	ImageLoader::ImageData textureData;
-	ImageLoader::LoadImageFromFile("./texture/brick.png", textureData);
+		m_isRunning = DXContext::Get().CreateResources(textureData);
+	}
 
 	return m_isRunning;
 }

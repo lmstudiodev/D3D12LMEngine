@@ -1,6 +1,7 @@
 #pragma once
 #include <support/WinInclude.h>
 #include <support/ComPointer.h>
+#include <support/ImageLoader.h>
 #include <D3D12/DXContext.h>
 
 class  DXWindow

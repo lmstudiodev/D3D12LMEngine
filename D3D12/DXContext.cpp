@@ -40,11 +40,18 @@ bool DXContext::Init()
 
 	CheckRaytracingSupport();
 
-	CreateCommittedResources();
+	return true;
+}
+
+bool DXContext::CreateResources(const ImageLoader::ImageData& textureData)
+{
+	uint32_t textureSize = (textureData.height * textureData.width * ((textureData.bpp + 7) / 8));
+	
+	CreateCommittedResources(textureData, textureSize);
 
 	LoadMesh();
 
-	CreateBuffers(vertices, sizeof(vertices));
+	CreateBuffers(vertices, sizeof(vertices), textureData, textureSize);
 
 	LoadShader();
 
@@ -55,7 +62,7 @@ bool DXContext::Init()
 		return false;
 
 	SetVertexBufferView();
-
+	
 	return true;
 }
 
@@ -172,8 +179,8 @@ void DXContext::CheckRaytracingSupport()
 	std::cout << "[D3D12] Ray Tracing supported  !!!" << std::endl;
 }
 
-void DXContext::CreateCommittedResources()
-{
+void DXContext::CreateCommittedResources(const ImageLoader::ImageData& textureData, uint32_t textureSize)
+{	
 	D3D12_HEAP_PROPERTIES hpUpload{};
 	hpUpload.Type = D3D12_HEAP_TYPE_UPLOAD;
 	hpUpload.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
@@ -188,36 +195,92 @@ void DXContext::CreateCommittedResources()
 	hpDefault.CreationNodeMask = 0;
 	hpDefault.VisibleNodeMask = 0;
 
-	D3D12_RESOURCE_DESC resDesc{};
-	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	resDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-	resDesc.Width = 1024;
-	resDesc.Height = 1;
-	resDesc.DepthOrArraySize = 1;
-	resDesc.MipLevels = 1;
-	resDesc.Format = DXGI_FORMAT_UNKNOWN;
-	resDesc.SampleDesc.Count = 1;
-	resDesc.SampleDesc.Quality = 0;
-	resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	D3D12_RESOURCE_DESC vertexBufferDesc{};
+	vertexBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	vertexBufferDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+	vertexBufferDesc.Width = 1024;
+	vertexBufferDesc.Height = 1;
+	vertexBufferDesc.DepthOrArraySize = 1;
+	vertexBufferDesc.MipLevels = 1;
+	vertexBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+	vertexBufferDesc.SampleDesc.Count = 1;
+	vertexBufferDesc.SampleDesc.Quality = 0;
+	vertexBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	vertexBufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-	m_device->CreateCommittedResource(&hpUpload, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_uploadBuffer));
-	m_device->CreateCommittedResource(&hpDefault, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_vertexBuffer));
+	D3D12_RESOURCE_DESC uploadBufferDesc{};
+	uploadBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	uploadBufferDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+	uploadBufferDesc.Width = textureSize + 1024;
+	uploadBufferDesc.Height = 1;
+	uploadBufferDesc.DepthOrArraySize = 1;
+	uploadBufferDesc.MipLevels = 1;
+	uploadBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+	uploadBufferDesc.SampleDesc.Count = 1;
+	uploadBufferDesc.SampleDesc.Quality = 0;
+	uploadBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	uploadBufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	m_device->CreateCommittedResource(&hpUpload, D3D12_HEAP_FLAG_NONE, &uploadBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_uploadBuffer));
+	m_device->CreateCommittedResource(&hpDefault, D3D12_HEAP_FLAG_NONE, &vertexBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_vertexBuffer));
+
+	D3D12_RESOURCE_DESC resTextureDesc{};
+	resTextureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resTextureDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+	resTextureDesc.Width = textureData.width;
+	resTextureDesc.Height = textureData.height;
+	resTextureDesc.DepthOrArraySize = 1;
+	resTextureDesc.MipLevels = 1;
+	resTextureDesc.Format = textureData.giPixelFormat;
+	resTextureDesc.SampleDesc.Count = 1;
+	resTextureDesc.SampleDesc.Quality = 0;
+	resTextureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resTextureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	m_device->CreateCommittedResource(&hpDefault, D3D12_HEAP_FLAG_NONE, &resTextureDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_texture));
 }
 
-void DXContext::CreateBuffers(const void* source, size_t size)
+void DXContext::CreateBuffers(const void* source, size_t size, const ImageLoader::ImageData& texture, uint32_t textureSize)
 {
-	void* uploadBufferAddress;
+	char* uploadBufferAddress;
 	D3D12_RANGE uploadRange;
 	uploadRange.Begin = 0;
-	uploadRange.End = 1023;
+	uploadRange.End = 1024 + textureSize;
 
-	m_uploadBuffer->Map(0, &uploadRange, &uploadBufferAddress);
-	memcpy(uploadBufferAddress, source, size);
+	m_uploadBuffer->Map(0, &uploadRange, (void**)&uploadBufferAddress);
+	memcpy(&uploadBufferAddress[0], texture.dataByte.data(), textureSize);
+	memcpy(&uploadBufferAddress[textureSize], source, size);
 	m_uploadBuffer->Unmap(0, &uploadRange);
 
 	auto* cmdList = InitCommandList();
-	cmdList->CopyBufferRegion(m_vertexBuffer, 0, m_uploadBuffer, 0, 1024);
+	cmdList->CopyBufferRegion(m_vertexBuffer, 0, m_uploadBuffer, textureSize, 1024);
+
+	D3D12_BOX textureSizeAsBox{};
+	textureSizeAsBox.left = 0;
+	textureSizeAsBox.top = 0;
+	textureSizeAsBox.front = 0;
+	textureSizeAsBox.right = texture.width;
+	textureSizeAsBox.bottom = texture.height;
+	textureSizeAsBox.back = 1;
+
+	D3D12_TEXTURE_COPY_LOCATION cpyDest{};
+	cpyDest.pResource = m_texture;
+	cpyDest.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+	cpyDest.SubresourceIndex = 0;
+
+	uint32_t stride = texture.width * ((texture.bpp + 7) / 8);
+
+	D3D12_TEXTURE_COPY_LOCATION cpySource{};
+	cpySource.pResource = m_uploadBuffer;
+	cpySource.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+	cpySource.PlacedFootprint.Offset = 0;
+	cpySource.PlacedFootprint.Footprint.Width = texture.width;
+	cpySource.PlacedFootprint.Footprint.Height = texture.height;
+	cpySource.PlacedFootprint.Footprint.Depth = 1;
+	cpySource.PlacedFootprint.Footprint.RowPitch = texture.width * ((texture.bpp + 7) / 8);
+	cpySource.PlacedFootprint.Footprint.Format = texture.giPixelFormat;
+
+	cmdList->CopyTextureRegion(&cpyDest, 0, 0, 0, &cpySource, &textureSizeAsBox);
 
 	ExecuteCommandList();
 }
