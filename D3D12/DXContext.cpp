@@ -66,6 +66,29 @@ bool DXContext::CreateResources(const ImageLoader::ImageData& textureData)
 	return true;
 }
 
+void DXContext::Update(const float width, const float height)
+{
+	static float angle = 0.0f;
+	angle += 0.005f;
+	
+	// Update the model matrix.
+	float angleOfView = angle * 90.0f;
+	const DirectX::XMVECTOR rotationAxis = DirectX::XMVectorSet(0, 1, 0, 0);
+	m_ModelMatrix = DirectX::XMMatrixRotationAxis(rotationAxis, DirectX::XMConvertToRadians(angleOfView));
+
+	// Update the view matrix.
+	const DirectX::XMVECTOR eyePosition = DirectX::XMVectorSet(0, 0, -3, 1);
+	const DirectX::XMVECTOR focusPoint = DirectX::XMVectorSet(0, 0, 0, 1);
+	const DirectX::XMVECTOR upDirection = DirectX::XMVectorSet(0, 1, 0, 0);
+	m_ViewMatrix = DirectX::XMMatrixLookAtLH(eyePosition, focusPoint, upDirection);
+
+	// Update the projection matrix.
+	float aspectRatio = width / height;
+	m_ProjectionMatrix = DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PI / 4, aspectRatio, 0.1f, 100.0f);
+	
+	Draw(width, height);
+}
+
 void DXContext::Draw(const float width, const float height)
 {
 	m_cmdList->SetPipelineState(m_pso);
@@ -78,10 +101,25 @@ void DXContext::Draw(const float width, const float height)
 	SetViewPort(width, height);
 
 	static float color[] = { 0.0f, 0.0f, 0.0f };
-	pukeColor(color);
+	PukeColor(color);
+
+	static float angle = 0.0f;
+	angle += 0.005f;
+
+	Correction correction{
+		.aspectRatio = height / width,
+		.zoom = 0.8,
+		.sinAngle = sinf(angle),
+		.cosAngle = cosf(angle)
+	};
+
+	DirectX::XMMATRIX mvpMatrix = XMMatrixMultiply(m_ModelMatrix, m_ViewMatrix);
+	mvpMatrix = XMMatrixMultiply(mvpMatrix, m_ProjectionMatrix);
 
 	m_cmdList->SetGraphicsRoot32BitConstants(0, 3, color, 0);
-	m_cmdList->SetGraphicsRootDescriptorTable(1, m_textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	m_cmdList->SetGraphicsRoot32BitConstants(1, 4, &correction, 0);
+	m_cmdList->SetGraphicsRoot32BitConstants(2, sizeof(DirectX::XMMATRIX) / 4, &mvpMatrix, 0);
+	m_cmdList->SetGraphicsRootDescriptorTable(3, m_textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
 	m_cmdList->DrawInstanced(_countof(vertices), 1, 0, 0);
 }
@@ -445,13 +483,33 @@ void DXContext::LoadShader()
 
 void DXContext::LoadMesh()
 {
-	vertices[0] = { { -0.5f, -0.5f, 1.0f }, { 1.0f, 0.5f, 0.5f }, { 0.0f, 1.0f } };
-	vertices[1] = { { -0.5f, 0.5f, 1.0f },  { 0.5f, 1.0f, 0.5f }, { 0.0f, 0.0f } };
-	vertices[2] = { { 0.5f, -0.5f, 1.0f },  { 0.5f, 0.5f, 1.0f }, { 1.0f, 1.0f } };
+	//FRONT FACE
+	vertices[0] = { { -0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f } }; //0
+	vertices[1] = { { -0.5f, 0.5f, 0.0f },  { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } }; //1
+	vertices[2] = { { 0.5f, -0.5f, 0.0f },  { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f } }; //2
 
-	vertices[3] = { { -0.5f, 0.5f, 1.0f },  { 0.5f, 0.5f, 1.0f }, { 0.0f, 0.0f } };
-	vertices[4] = { { 0.5f, 0.5f, 1.0f },   { 0.5f, 1.0f, 0.5f }, { 1.0f, 0.0f } };
-	vertices[5] = { { 0.5f, -0.5f, 1.0f },  { 1.0f, 0.5f, 0.5f }, { 1.0f, 1.0f } };
+	vertices[3] = { { -0.5f, 0.5f, 0.0f },  { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } }; //1
+	vertices[4] = { { 0.5f, 0.5f, 0.0f },   { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } }; //3
+	vertices[5] = { { 0.5f, -0.5f, 0.0f },  { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f } }; //2
+
+	//LEFT FACE
+	vertices[6] = { { -0.5f, 0.5f, 1.0f },   { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }; //7
+	vertices[7] = { { -0.5f, 0.5f, 0.0f },  { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } }; //1
+	vertices[8] = { { -0.5f, -0.5f, 0.0f },  { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } }; //0
+
+	vertices[9] = { { -0.5f, -0.5f, 0.0f },  { 0.0f, 0.0f, 1.0f  }, { 0.0f, 0.0f } }; //0
+	vertices[10] = { { -0.5f, -0.5f, 1.0f },  { 0.0f, 0.0f, 1.0f  }, { 0.0f, 0.0f } }; //8
+	vertices[11] = { { -0.5f, 0.5f, 1.0f },  { 0.0f, 0.0f, 1.0f  }, { 0.0f, 0.0f } }; //7
+
+	//RIGHT FACE
+	vertices[12] = { { 0.5f, 0.5f, 0.0f },   { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f } }; //3
+	vertices[13] = { { 0.5f, 0.5f, 1.0f },  { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f } }; //5
+	vertices[14] = { { 0.5f, -0.5f, 0.0f },  { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f } }; //2
+
+	vertices[15] = { { 0.5f, -0.5f, 0.0f },  { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f } }; //2
+	vertices[16] = { { 0.5f, 0.5f, 1.0f },  { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f } }; //5
+	vertices[17] = { { 0.5f, -0.5f, 1.0f },  { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f } }; //6
+
 }
 
 void DXContext::SignalAndWait()
@@ -471,10 +529,12 @@ void DXContext::SignalAndWait()
 	}
 }
 
-void DXContext::pukeColor(float* color)
+void DXContext::PukeColor(float* color)
 {
 	static int pukeState = 0;
+
 	color[pukeState] += 0.01f;
+
 	if (color[pukeState] > 1.0f)
 	{
 		pukeState++;
@@ -486,4 +546,9 @@ void DXContext::pukeColor(float* color)
 			pukeState = 0;
 		}
 	}
+}
+
+UINT DXContext::CalculateConstantBufferAlignement(const UINT allocation)
+{
+	return (allocation + 255) & ~255;
 }

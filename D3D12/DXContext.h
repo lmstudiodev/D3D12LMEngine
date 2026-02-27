@@ -33,13 +33,15 @@ private:
 	void SetViewPort(const float width, const float height);
 	void LoadShader();
 	void LoadMesh();
-	void pukeColor(float* color);
+	void PukeColor(float* color);
+	UINT CalculateConstantBufferAlignement(const UINT allocation);
+	void Draw(const float width, const float height);
 
 public:
 	bool Init();
 	bool CreateResources(const ImageLoader::ImageData& textureData);
 	void ShutDown();
-	void Draw(const float width, const float height);
+	void Update(const float width, const float height);
 	void ExecuteCommandList();
 	ID3D12GraphicsCommandList7* InitCommandList();
 
@@ -80,9 +82,15 @@ private:
 
 	D3D12_VERTEX_BUFFER_VIEW m_vbv{};
 
-	Vertex vertices[6]{};
+	Vertex vertices[18]{};
 
 	Shader m_rootSignatureShader;
 	Shader m_vertexShader;
 	Shader m_pixelShader;
+
+	float m_FoV;
+
+	DirectX::XMMATRIX m_ModelMatrix;
+	DirectX::XMMATRIX m_ViewMatrix;
+	DirectX::XMMATRIX m_ProjectionMatrix;
 };
